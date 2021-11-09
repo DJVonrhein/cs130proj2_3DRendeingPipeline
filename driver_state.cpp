@@ -18,9 +18,15 @@ void initialize_render(driver_state& state, int width, int height)
 {
     state.image_width=width;
     state.image_height=height;
-    state.image_color=0;
+
+    state.image_color= 0;
     state.image_depth=0;
-    std::cout<<"TODO: allocate and initialize state.image_color and state.image_depth."<<std::endl;
+    // std::cout<<"TODO: allocate and initialize state.image_color and state.image_depth."<<std::endl;
+
+    state.image_color = new pixel[width * height];
+    for (unsigned i = 0; i < width * height; ++i){
+        state.image_color[i] = make_pixel(0,0,0);
+    }
 }
 
 // This function will be called to render the data that has been stored in this class.
