@@ -91,30 +91,31 @@ void rasterize_triangle(driver_state& state, const data_geometry& v0,
     vec3 C = vec3(v2.gl_Position[0]/v2.gl_Position[3], v2.gl_Position[1]/v2.gl_Position[3], v2.gl_Position[2]/v2.gl_Position[3]);
 
     A[0] = (A[0] + 1 )/2.0 * (state.image_width -1);
-    A[1] = (A[1] + 1 )/2.0 * (state.image_width -1);
+    A[1] = (A[1] + 1 )/2.0 * (state.image_height -1);
     B[0] = (B[0] + 1 )/2.0 * (state.image_width -1);
-    B[1] = (B[1] + 1 )/2.0 * (state.image_width -1);
+    B[1] = (B[1] + 1 )/2.0 * (state.image_height -1);
     C[0] = (C[0] + 1 )/2.0 * (state.image_width -1);
-    C[1] = (C[1] + 1 )/2.0 * (state.image_width -1);
+    C[1] = (C[1] + 1 )/2.0 * (state.image_height -1);
 
     float areaABC = 0.5 * ( ( B[0] * C[1] - C[0] * B[1] ) + ( C[0] * A[1] - A[0] * C[1] ) + ( A[0] * B[1] - B[0] * A[1] ));
     
+    float alpha, beta, gamma;
     for(unsigned i = 0; i < state.image_width; ++i){
         for(unsigned j = 0; j < state.image_height; ++j){
             vec3 P = vec3(i, j, 0);
             
-            float areaPBC= 0.5 * ( ( B[0] * C[1] - C[0] * B[1] ) + ( C[0] * P[1] - P[0] * C[1] ) + ( P[0] * B[1] - B[0] * P[1] ) ); // might b fukt
-            float areaAPC = 0.5 * ( ( P[0] * C[1] - C[0] * P[1]) + ( C[0] * A[1] - A[0] * C[1] ) + ( A[0] * P[1] - P[0] * A[1] ) );
-            float areaABP = 0.5 * ( ( B[0] * P[1] - P[0] * B[1] ) + (P[0] * A[1] - A[0] * P[1] ) + ( A[0] * B[1] - B[0] * A[1] ) );
+            float areaPBC = 0.5 * ( ( B[0] * C[1] - C[0] * B[1] ) + ( C[0] * P[1] - P[0] * C[1] ) + ( P[0] * B[1] - B[0] * P[1] ) ); // might b fukt
+            float areaAPC = 0.5 * ( ( P[0] * C[1] - C[0] * P[1] ) + ( C[0] * A[1] - A[0] * C[1] ) + ( A[0] * P[1] - P[0] * A[1] ) );
+            float areaABP = 0.5 * ( ( B[0] * P[1] - P[0] * B[1] ) + ( P[0] * A[1] - A[0] * P[1] ) + ( A[0] * B[1] - B[0] * A[1] ) );
 
 
             // float alpha = (0.5 *((B[0]*C[1]-C[0]*B[1]) + (C[0]*P[1] - P[0]*C[1]) + (P[0]*B[1] - B[0]*P[1])) / areaABC);
             // float beta = (0.5 *((P[0]*C[1]-C[0]*P[1]) + (C[0]*A[1] - A[0]*C[1]) + (A[0]*P[1] - P[0]*A[1])) / areaABC);
             // float gamma = (0.5 *((B[0]*P[1]-P[0]*B[1]) + (P[0]*A[1] - A[0]*P[1]) + (A[0]*B[1] - B[0]*A[1])) / areaABC);
 
-            float alpha = areaPBC/areaABC;
-            float beta = areaAPC/areaABC;
-            float gamma = areaABP/areaABC;
+            alpha = areaPBC/areaABC;
+            beta = areaAPC/areaABC;
+            gamma = areaABP/areaABC;
 
             if(alpha >= 0 && beta >= 0 && gamma >= 0){
                 state.image_color[i + j * state.image_width] = make_pixel(255,255,255);
