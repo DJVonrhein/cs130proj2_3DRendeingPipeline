@@ -16,16 +16,18 @@ driver_state::~driver_state()
 // are not known when this class is constructed.
 void initialize_render(driver_state& state, int width, int height)
 {
-    state.image_width=width;
-    state.image_height=height;
+    state.image_width = width;
+    state.image_height = height;
 
-    state.image_color= 0;
-    state.image_depth=0;
+    state.image_color = 0;
+    state.image_depth = 0;
     // std::cout<<"TODO: allocate and initialize state.image_color and state.image_depth."<<std::endl;
 
     state.image_color = new pixel[width * height];
+    state.image_depth = new float[width * height];
     for (unsigned i = 0; i < width * height; ++i){  //make all pixels black
         state.image_color[i] = make_pixel(0,0,0);
+        state.image_depth[i] = std::numeric_limits<float>::max();
     }
 }
 
@@ -118,11 +120,69 @@ void rasterize_triangle(driver_state& state, const data_geometry& v0,
             gamma = areaABP/areaABC;
 
             if(alpha >= 0 && beta >= 0 && gamma >= 0){
-                state.image_color[i + j * state.image_width] = make_pixel(255,255,255);
+                // if((MAX_FLOATS_PER_VERTEX) == 3){
+                //     if(interp_rules[2] == flat){
+                //         state.image_color[i + j * state.image_width] = make_pixel(v0.gl_Position[3]);
+                //     }
+                //     if(interp_rules[2] == smooth){  //check one vertex interp rules
+                //         state.image_color[i + j * state.image_width] = make_pixel();
+                //     }
+                //     if(interp_rules[2] == noperspective){
+                //         state.image_color[i + j * state.image_width] = make_pixel();
+                //     }
+                // }
+                P[2] = alpha * A[2] + beta * B[2] + gamma * C[2] + 1;
+                data_fragment frag_color;
+                frag_color.data = new float[MAX_FLOATS_PER_VERTEX];
+                data_output p_color;
+                state.fragment_shader(frag_color, p_color, state.uniform_data);
+
+                int r_val = p_color.output_color[0] * 255;
+                int g_val = p_color.output_color[1] * 255;
+                int b_val = p_color.output_color[2] * 255;
+
+                
+
+                if(state.floats_per_vertex > 3){
+                    float k_val = (alpha / v0.gl_Position[3]) + (beta / v1.gl_Position[3]) + (gamma / v2.gl_Position[3]);
+
+                    switch(state.interp_rules[3]){
+                        case interp_type::flat:
+                            r_val = v0.data[3]*255;
+                            r_val = v0.data[4]*255;
+                            r_val = v0.data[5]*255;
+                        break;
+                        case interp_type::smooth:  //check one vertex interp rules
+                            alpha /= k_val * v0.gl_Position[3];
+                            beta  /= k_val * v1.gl_Position[3];
+                            gamma /= k_val * v2.gl_Position[3];
+
+
+                            r_val = (v0.data[3]*alpha + v1.data[3]*beta + v2.data[3]*gamma)*255;
+                            g_val = (v0.data[4]*alpha + v1.data[4]*beta + v2.data[4]*gamma)*255;
+                            b_val = (v0.data[5]*alpha + v1.data[5]*beta + v2.data[5]*gamma)*255;
+                        break;
+                        case interp_type::noperspective:
+                            r_val = (v0.data[3]*alpha + v1.data[3]*beta + v2.data[3]*gamma)*255;
+                            g_val = (v0.data[4]*alpha + v1.data[4]*beta + v2.data[4]*gamma)*255; 
+                            b_val = (v0.data[5]*alpha + v1.data[5]*beta + v2.data[5]*gamma)*255;
+                        break;
+                      
+                    }
+                }
+
+
+                if(P[2] < state.image_depth[state.image_width *j + i]){
+                    state.image_color[i + j * state.image_width] = make_pixel(r_val, g_val, b_val);
+                    state.image_depth[state.image_width *j + i]= P[2];
+                }
+
+                delete[] frag_color.data;
+
             }
+
         }
-
-    }
     
-}
+    }
 
+}
