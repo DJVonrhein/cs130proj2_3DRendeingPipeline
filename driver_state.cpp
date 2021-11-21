@@ -16,11 +16,11 @@ driver_state::~driver_state()
 // are not known when this class is constructed.
 void initialize_render(driver_state& state, int width, int height)
 {
-    state.image_width=width;
-    state.image_height=height;
+    state.image_width = width;
+    state.image_height = height;
 
-    state.image_color= 0;
-    state.image_depth=0;
+    state.image_color = 0;
+    state.image_depth = 0;
     // std::cout<<"TODO: allocate and initialize state.image_color and state.image_depth."<<std::endl;
 
     state.image_color = new pixel[width * height];
@@ -143,7 +143,9 @@ void rasterize_triangle(driver_state& state, const data_geometry& v0,
 
                 
 
-                if((state.floats_per_vertex) > 3){
+                if(state.floats_per_vertex > 3){
+                    float k_val = (alpha / v0.gl_Position[3]) + (beta / v1.gl_Position[3]) + (gamma / v2.gl_Position[3]);
+
                     switch(state.interp_rules[3]){
                         case interp_type::flat:
                             r_val = v0.data[3]*255;
@@ -151,9 +153,10 @@ void rasterize_triangle(driver_state& state, const data_geometry& v0,
                             r_val = v0.data[5]*255;
                         break;
                         case interp_type::smooth:  //check one vertex interp rules
-                            alpha /= v0.gl_Position[3]* (alpha + beta / v1.gl_Position[3] + gamma / v2.gl_Position[3]);
-                            beta /= v1.gl_Position[3]* (alpha/v0.gl_Position[3] + beta + gamma / v2.gl_Position[3]);
-                            gamma /= v2.gl_Position[3]* (alpha/v0.gl_Position[3] + beta / v1.gl_Position[3] + gamma );
+                            alpha /= k_val * v0.gl_Position[3];
+                            beta  /= k_val * v1.gl_Position[3];
+                            gamma /= k_val * v2.gl_Position[3];
+
 
                             r_val = (v0.data[3]*alpha + v1.data[3]*beta + v2.data[3]*gamma)*255;
                             g_val = (v0.data[4]*alpha + v1.data[4]*beta + v2.data[4]*gamma)*255;
