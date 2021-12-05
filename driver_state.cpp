@@ -52,22 +52,22 @@ void render(driver_state& state, render_type type)
     switch(type){
         case render_type::triangle:
             for(unsigned i = 0; i < state.num_vertices; i+= 3){
-                rasterize_triangle(state, data_geo[i], data_geo[i+1], data_geo[i+2]);
+                clip_triangle(state, data_geo[i], data_geo[i+1], data_geo[i+2], 0);
             }
             break;
         case render_type::indexed:
-            for(unsigned i = 0; i < state.num_triangles - 2; i++){
-                clip_triangle(state, data_geo[i], data_geo[i+1], data_geo[i+2]);
+            for(unsigned i = 0; i < state.num_triangles; i++){
+                clip_triangle(state, data_geo[state.index_data[i*state.floats_per_vertex]], data_geo[state.index_data[i*state.floats_per_vertex + 1]], data_geo[state.index_data[i*state.floats_per_vertex + 2]], 0);
             }
             break;
         case render_type::fan:
             for(unsigned i = 0; i < state.num_vertices - 2; i++){
-                clip_triangle(state, data_geo[i], data_geo[i+1], data_geo[i+2]);
+                clip_triangle(state, data_geo[i], data_geo[i+1], data_geo[i+2], 0);
             }
             break;
         case render_type::strip:
             for(unsigned i = 0; i < state.num_vertices - 2; i++){
-                clip_triangle(state, data_geo[i], data_geo[i+1], data_geo[i+2]);
+                clip_triangle(state, data_geo[i], data_geo[i+1], data_geo[i+2], 0);
             }
             break;
     }
