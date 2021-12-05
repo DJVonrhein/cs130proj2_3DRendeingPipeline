@@ -383,8 +383,8 @@ void rasterize_triangle(driver_state& state, const data_geometry& v0,
                     switch(state.interp_rules[3]){
                         case interp_type::flat:
                             r_val = v0.data[3]*255;
-                            r_val = v0.data[4]*255;
-                            r_val = v0.data[5]*255;
+                            g_val = v0.data[4]*255;
+                            b_val = v0.data[5]*255;
                         break;
                         case interp_type::smooth:  //check one vertex interp rules
                             alpha /= k_val * v0.gl_Position[3];
