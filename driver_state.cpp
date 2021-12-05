@@ -97,9 +97,7 @@ void clip_triangle(driver_state& state, const data_geometry& v0,
     bool a_out; // indicates v0 lies outside, and therefore should be clipped
     bool b_out; // v1
     bool c_out; // v2
-    
-    bool interp_persp = 0;
-    
+        
     data_geometry p;
     data_geometry q;
     p.data = new float[MAX_FLOATS_PER_VERTEX];
