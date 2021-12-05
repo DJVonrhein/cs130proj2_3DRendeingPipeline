@@ -134,10 +134,13 @@ void clip_triangle(driver_state& state, const data_geometry& v0,
         rasterize_triangle(state, v0, v1, v2);
         return;
     }
+    else{
+        exit(0);
+    }
 
 
     //compute which of the vertices lie in or out of the cube
-    if (planeval == -1) {   //if negative face
+    if (planeval == -1) {   //if negative direction
         a_out = (v0.gl_Position[planedimension] < -v0.gl_Position[3])? 1: 0;
         b_out = (v1.gl_Position[planedimension] < -v1.gl_Position[3])? 1: 0;
         c_out = (v2.gl_Position[planedimension] < -v2.gl_Position[3])? 1: 0;
@@ -162,7 +165,7 @@ void clip_triangle(driver_state& state, const data_geometry& v0,
                 q.data[i] = v2.data[i] + lamCA * (v0.data[i] - v2.data[i]);
             }
 
-            else{
+            else if (state.interp_rules[i] == interp_type::smooth){
                 k = lamBC / v2.gl_Position[3] + (1 - lamBC) * v1.gl_Position[3];
                 p.data[i] = v2.data[i] + lamBC/(v2.gl_Position[3] * k) * (v1.data[i] - v2.data[i]);
                 k = lamCA / v2.gl_Position[3] + (1 - lamCA) * v0.gl_Position[3];
@@ -176,7 +179,7 @@ void clip_triangle(driver_state& state, const data_geometry& v0,
 
     else if(a_out && !b_out && c_out){  // b in, a c out
         lamAB = (v1.gl_Position[3] * planeval - v1.gl_Position[planedimension]) / (v0.gl_Position[planedimension] - v1.gl_Position[planedimension]);
-        lamCA = (v1.gl_Position[3] * planeval - v1.gl_Position[planedimension]) / (v2.gl_Position[planedimension] - v1.gl_Position[planedimension]);
+        lamBC = (v1.gl_Position[3] * planeval - v1.gl_Position[planedimension]) / (v2.gl_Position[planedimension] - v1.gl_Position[planedimension]);
 
         p.gl_Position = v1.gl_Position + lamAB * (v0.gl_Position - v1.gl_Position);
         q.gl_Position = v1.gl_Position + lamBC * (v2.gl_Position - v1.gl_Position);
@@ -187,11 +190,11 @@ void clip_triangle(driver_state& state, const data_geometry& v0,
                 q.data[i] = v1.data[i] + lamBC * (v2.data[i] - v1.data[i]);
             }
 
-            else{
+            else if (state.interp_rules[i] == interp_type::smooth){
                 k = lamAB / v1.gl_Position[3] + (1 - lamAB) * v0.gl_Position[3];
-                p.data[i] = v1.data[i] + lamAB/(v2.gl_Position[3] * k) * (v0.data[i] - v1.data[i]);
+                p.data[i] = v1.data[i] + lamAB/(v1.gl_Position[3] * k) * (v0.data[i] - v1.data[i]);
                 k = lamBC / v1.gl_Position[3] + (1 - lamBC) * v2.gl_Position[3];
-                q.data[i] = v1.data[i] + lamBC/(v2.gl_Position[3] * k) * (v2.data[i] - v1.data[i]);
+                q.data[i] = v1.data[i] + lamBC/(v1.gl_Position[3] * k) * (v2.data[i] - v1.data[i]);
             }
         }
 
@@ -211,11 +214,11 @@ void clip_triangle(driver_state& state, const data_geometry& v0,
                 q.data[i] = v0.data[i] + lamAB * (v1.data[i] - v0.data[i]);
             }
 
-            else{
+            else if (state.interp_rules[i] == interp_type::smooth){
                 k = lamCA / v0.gl_Position[3] + (1 - lamCA) * v2.gl_Position[3];
-                p.data[i] = v0.data[i] + lamCA/(v2.gl_Position[3] * k) * (v2.data[i] - v0.data[i]);
+                p.data[i] = v0.data[i] + lamCA/(v0.gl_Position[3] * k) * (v2.data[i] - v0.data[i]);
                 k = lamAB / v0.gl_Position[3] + (1 - lamAB) * v1.gl_Position[3];
-                q.data[i] = v0.data[i] + lamAB/(v1.gl_Position[3] * k) * (v1.data[i] - v0.data[i]);
+                q.data[i] = v0.data[i] + lamAB/(v0.gl_Position[3] * k) * (v1.data[i] - v0.data[i]);
             }
         }
 
@@ -235,13 +238,13 @@ void clip_triangle(driver_state& state, const data_geometry& v0,
                 q.data[i] = v2.data[i] + lamCA * (v0.data[i] - v2.data[i]);
             }
 
-            else{
+            else if (state.interp_rules[i] == interp_type::smooth){
                 k = lamAB / v1.gl_Position[3] + (1-lamAB) / v0.gl_Position[3];
                 float lamABpersp = lamAB / (v1.gl_Position[3] * k);
                 p.data[i] = v1.data[i] + lamABpersp * (v0.data[i] - v1.data[i]);
-                k = lamCA / v2.gl_Position[3] + (1 - lamCA) / v0.gl_Position[3];
+                k = lamCA / v2.data[3] + (1 - lamCA) / v0.data[3];
                 float lamCApersp = lamCA / (v2.gl_Position[3] * k);
-                p.data[i] = v2.data[i] + lamCApersp * (v0.data[i] - v2.data[i]);
+                q.data[i] = v2.data[i] + lamCApersp * (v0.data[i] - v2.data[i]);
             }
         }
 
@@ -253,8 +256,8 @@ void clip_triangle(driver_state& state, const data_geometry& v0,
         lamCA = (v0.gl_Position[3]*planeval - v0.gl_Position[planedimension]) / (v2.gl_Position[planedimension] - v0.gl_Position[planedimension]);
         lamBC = (v1.gl_Position[3]*planeval - v1.gl_Position[planedimension]) / (v2.gl_Position[planedimension] - v1.gl_Position[planedimension]);
 
-        p.gl_Position = v0.gl_Position + lamBC * (v2.gl_Position - v0.gl_Position);
-        q.gl_Position = v1.gl_Position + lamCA * (v2.gl_Position - v1.gl_Position);
+        p.gl_Position = v0.gl_Position + lamCA * (v2.gl_Position - v0.gl_Position);
+        q.gl_Position = v1.gl_Position + lamBC * (v2.gl_Position - v1.gl_Position);
 
         for (unsigned i = 0; i < MAX_FLOATS_PER_VERTEX; ++i){
             if (state.interp_rules[i] == interp_type::noperspective){
@@ -262,13 +265,13 @@ void clip_triangle(driver_state& state, const data_geometry& v0,
                 q.data[i] = v1.data[i] + lamBC * (v2.data[i] - v1.data[i]);
             }
 
-            else{
-                k = lamCA / v0.gl_Position[3] + (1-lamCA) / v2.gl_Position[3];
+            else if (state.interp_rules[i] == interp_type::smooth){
+                k = lamCA / v0.data[3] + (1-lamCA) / v2.data[3];
                 float lamCApersp = lamCA / (v0.gl_Position[3] * k);
                 p.data[i] = v0.data[i] + lamCApersp * (v2.data[i] - v0.data[i]);
-                k = lamBC / v1.gl_Position[3] + (1 - lamBC) / v2.gl_Position[3];
-                float lamBCpersp = lamBC / (v2.gl_Position[3] * k);
-                p.data[i] = v1.data[i] + lamBCpersp * (v2.data[i] - v1.data[i]);
+                k = lamBC / v1.data[3] + (1 - lamBC) / v2.data[3];
+                float lamBCpersp = lamBC / (v1.gl_Position[3] * k);
+                q.data[i] = v1.data[i] + lamBCpersp * (v2.data[i] - v1.data[i]);
             }
 
         }
@@ -285,17 +288,17 @@ void clip_triangle(driver_state& state, const data_geometry& v0,
 
         for (unsigned i = 0; i < MAX_FLOATS_PER_VERTEX; ++i){
             if (state.interp_rules[i] == interp_type::noperspective){
-                p.data[i] = v2.data[i] + lamCA * (v1.data[i] - v2.data[i]);
-                q.data[i] = v0.data[i] + lamBC * (v1.data[i] - v0.data[i]);
+                p.data[i] = v2.data[i] + lamBC * (v1.data[i] - v2.data[i]);
+                q.data[i] = v0.data[i] + lamAB * (v1.data[i] - v0.data[i]);
             }
 
-            else{
-                k = lamBC / v2.gl_Position[3] + (1-lamBC) / v1.gl_Position[3];
-                float lamBCpersp = lamCA / (v0.gl_Position[3] * k);
+            else if (state.interp_rules[i] == interp_type::smooth){
+                k = lamBC / v2.data[3] + (1 - lamBC) / v1.data[3];
+                float lamBCpersp = lamBC / (v2.gl_Position[3] * k);
                 p.data[i] = v2.data[i] + lamBCpersp * (v1.data[i] - v2.data[i]);
-                k = lamAB / v0.gl_Position[3] + (1 - lamAB) / v1.gl_Position[3];
-                float lamABpersp = lamAB / (v2.gl_Position[3] * k);
-                p.data[i] = v0.data[i] + lamABpersp * (v1.data[i] - v0.data[i]);
+                k = lamAB / v0.data[3] + (1 - lamAB) / v1.data[3];
+                float lamABpersp = lamAB / (v0.gl_Position[3] * k);
+                q.data[i] = v0.data[i] + lamABpersp * (v1.data[i] - v0.data[i]);
             }
 
         }
